@@ -1,6 +1,12 @@
-.idea/aws.xml
+.idea/
 frontend/frontend-build.zip
 frontend/temp_extract/
 frontend/src/config.js~
 venv/
 .env
+infrastructure/.terraform
+infrastructure/.terraform.lock.hcl
+infrastructure/terraform.tfstate
+infrastructure/.terraform.tfstate.lock.info
+infrastructure/terraform.tfstate.backup
+logs/
