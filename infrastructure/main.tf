@@ -98,6 +98,43 @@ resource "aws_db_instance" "postgres_db" {
 }
 
 
+### IAM ROLE FOR EC2 ###
+
+# Create IAM role for EC2 instance
+resource "aws_iam_role" "grocerymate_ec2_s3_role" {
+  name = "grocerymate-ec2-s3-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+# 2. Attach the AWS-managed S3 Full Access policy to the Role
+resource "aws_iam_role_policy_attachment" "s3_full_access" {
+  role       = aws_iam_role.ec2_s3_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+}
+
+# 3. Create an Instance Profile (The "wrapper" that lets EC2 wear the Role)
+resource "aws_iam_instance_profile" "ec2_s3_profile" {
+  name = "grocerymate-ec2-s3-profile"
+  role = aws_iam_role.ec2_s3_role.name
+}
+
+
+
+
+
+
 # OUTPUTS
 output "ec2_public_ip" {
   description = "Public ip of EC2 instance"
