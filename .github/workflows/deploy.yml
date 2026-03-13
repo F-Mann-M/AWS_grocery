@@ -7,7 +7,7 @@ on:
 
 permissions:
   id-token: write # Allow GitHub Actions to request OIDC tokens from the provider
-  content: read # Allow GitHub Actions to read the repository code (needed for building the Docker image)
+  contents: read # Allow GitHub Actions to read the repository code (needed for building the Docker image)
 
 
 jobs:
