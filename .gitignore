@@ -123,6 +123,8 @@ instance
 
 *.py~
 .idea/
+.idea/e-commerce.iml
+.idea/misc.xml
 .vscode/
 infrastructure/terraform.tfstate
 infrastructure/terraform.tfstate.backup
