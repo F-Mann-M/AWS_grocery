@@ -1,0 +1,31 @@
+name: Deploy Grocerymate to AWS
+
+on:
+  push:
+    branches:
+      - version2
+
+permisssion: 
+  id-tokens: write # Allow GitHub Actions to request OIDC tokens from the provider
+  content: read # Allow GitHub Actions to read the repository code (needed for building the Docker image)
+
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Clone the repository to the GitHub runner
+    - name: Checkout Code 
+      uses: actions/checkout@v4
+
+    # Prove to AWS who you are using GitHub Secrets
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ secrets.AWS_ROLE_ARN }} # The Role ARN from Terraform output
+        aws-region: eu-central-1
+    
+    - name: Confirm that the OIDC authentication is working correctly
+      run: |
+        aws sts get-caller-identity 

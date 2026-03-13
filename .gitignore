@@ -128,10 +128,6 @@ infrastructure/terraform.tfstate
 infrastructure/terraform.tfstate.backup
 infrastructure/.terraform.lock.hcl
 infrastructure/variables.tf
-infrastructure/
-.idea/e-commerce.iml
-.idea/misc.xml
-.idea/e-commerce.iml
-.idea/misc.xml
-.idea/e-commerce.iml
-.idea/misc.xml
+infrastructure/.terraform/
+
+
