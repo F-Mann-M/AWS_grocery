@@ -94,25 +94,28 @@ jobs:
         # make the variables above available inside the EC2 terminal
         envs: ECR_REGISTRY,ECR_REPOSITORY,IMAGE_TAG,JWT_SECRET,PG_USER,PG_PASS,PG_DB,PG_HOST
         script: |
-          echo "Installing PostgreSQL Client..."
-          sudo dnf install -y postgresql15
+          echo "Installing PostgreSQL Client and Docker..."
+          sudo dnf update -y
+          sudo dnf install -y postgresql15 docker
+          sudo systemctl start docker
+          sudo systemctl enable docker
           
           echo "Running Database Migrations..."
-          # This executes the SQL file we copied over in the previous step
+          # This executes the SQL file copied over in the previous step
           PGPASSWORD=$PG_PASS psql -h $PG_HOST -U $PG_USER -d $PG_DB -f /home/ec2-user/schema.sql
           
           echo "Authenticating Docker with AWS ECR..."
           aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin $ECR_REGISTRY
           
           echo "Pulling fresh Docker Image..."
-          docker pull $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          sudo docker pull $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           
           echo "Stopping and removing old container..."
-          docker stop grocerymate-app || true
-          docker rm grocerymate-app || true
+          sudo docker stop grocerymate-app || true
+          sudo docker rm grocerymate-app || true
           
           echo "Starting new container with Secrets..."
-          docker run -d \
+          sudo docker run -d \
             --name grocerymate-app \
             -p 5000:5000 \
             -e JWT_SECRET_KEY=$JWT_SECRET \
