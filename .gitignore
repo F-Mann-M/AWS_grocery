@@ -133,3 +133,6 @@ infrastructure/variables.tf
 infrastructure/.terraform/
 
 
+infrastructure/terraform.tfvars
+.idea/e-commerce.iml
+.idea/misc.xml

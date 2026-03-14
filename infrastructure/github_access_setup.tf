@@ -1,4 +1,4 @@
-### GITHUB ACTIONS OIDC SETUP ###
+### GITHUB ACTIONS OIDC SETUP AND SECURITY GROUP PERMISSIONS TO CHANGE IP IN EC2SECURITY GROUP ###
 
 # to access AWS resources securely from GitHub Actions without using long-lived credentials, 
 # set up OpenID Connect (OIDC) trust between GitHub and AWS IAM. 
@@ -33,7 +33,7 @@ resource "aws_iam_role" "github_actions_role" {
           }
           StringLike = {
             # specify your GitHub repo here! The format is "repo:owner/repo:*" to allow all workflows in that repo.
-            "token.actions.githubusercontent.com:sub" = "repo:{var.GIT_USERNAME}/AWS_grocerye:*"
+            "token.actions.githubusercontent.com:sub" = "repo:${var.GIT_USERNAME}/AWS_grocery:*"
           }
         }
       }
@@ -48,9 +48,44 @@ resource "aws_iam_role_policy_attachment" "github_ecr_access" {
 }
 
 
+### SECURITY GROUP UPDATE PERMISSIONS FOR GITHUB ACTIONS ###
+
+# Create a policy allowing GitHub to modify the Security Group
+# This is necessary for the workflow to update the EC2 Security Group with the correct IP for SSH access during deployment
+# instead of except all IPs, we can let GitHub Actions update the SG dynamically with the correct IP during deployment, which is more secure than allowing all IPs permanently.
+resource "aws_iam_policy" "github_sg_policy" {
+  name        = "grocerymate-github-sg-policy"
+  description = "Allow GitHub Actions to update EC2 Security Group for SSH"
+  policy      = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = [
+          "ec2:AuthorizeSecurityGroupIngress",
+          "ec2:RevokeSecurityGroupIngress"
+        ]
+        Resource = "*" # Or restrict to your specific SG ARN if you prefer
+      }
+    ]
+  })
+}
+
+# Attach the new policy to your existing GitHub Actions Role
+resource "aws_iam_role_policy_attachment" "github_sg_access" {
+  role       = aws_iam_role.github_actions_role.name
+  policy_arn = aws_iam_policy.github_sg_policy.arn
+}
+
+
 ### OUTPUTS ###
 
-# Print the Role ARN for use in GitHub Actions workflow
+# output the Role ARN for GitHub secrets configuration
 output "github_actions_role_arn" {
   value = aws_iam_role.github_actions_role.arn
+}
+
+# Output the Security Group ID for GitHub secrets configuration
+output "ec2_security_group_id" {
+  value = aws_security_group.ec2_sg.id # Replace 'ec2_sg' with the actual name of your EC2 Security Group resource!
 }
