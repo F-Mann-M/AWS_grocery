@@ -128,20 +128,7 @@ jobs:
           
           echo "Deployment finished!"
 
-    # Smoke Test to confirm the app is live and responding
-    - name: Run Smoke Test
-      env:
-        EC2_HOST: ${{ secrets.EC2_HOST }}
-      run: |
-        echo "Waiting 10 seconds for the Docker container to fully boot..."
-        sleep 10
         
-        echo "Pinging the live server..."
-        curl -f -s --retry 5 --retry-delay 5 --retry-connrefused http://$EC2_HOST/
-        
-        echo "Smoking Gun Test Passed! GroceryMate is officially live and responding."
-
-    
     # clean up the security group rule to remove the GitHub Runner IP after deployment for security hardening
     - name: Revoke Runner IP from Security Group
       if: always()
@@ -155,3 +142,16 @@ jobs:
           --protocol tcp \
           --port 22 \
           --cidr $RUNNER_IP/32 || true 
+
+    # Smoke Test to confirm the app is live and responding
+    - name: Run Smoke Test
+      env:
+        EC2_HOST: ${{ secrets.EC2_HOST }}
+      run: |
+        echo "Waiting 10 seconds for the Docker container to fully boot..."
+        sleep 10
+        
+        echo "Pinging the live server..."
+        curl -f -s --retry 5 --retry-delay 5 --retry-connrefused http://$EC2_HOST/
+        
+        echo "Smoking Gun Test Passed! GroceryMate is officially live and responding."
