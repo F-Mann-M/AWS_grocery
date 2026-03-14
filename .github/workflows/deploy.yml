@@ -41,8 +41,27 @@ jobs:
         ECR_REPOSITORY: grocerymate-app
         IMAGE_TAG: latest
       run: |
+        cd backend
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+    
+    # Get the public IP of the GitHub Runner
+    - name: Get GitHub Runner IP
+      id: ip
+      run: echo "ipv4=$(curl -s https://checkip.amazonaws.com)" >> $GITHUB_OUTPUT
+
+    # Whitelist the IP in the AWS Security Group
+    - name: Whitelist Runner IP in Security Group
+      env:
+        SG_ID: ${{ secrets.EC2_SG_ID }}
+        RUNNER_IP: ${{ steps.ip.outputs.ipv4 }}
+      run: |
+        echo "Adding $RUNNER_IP to Security Group $SG_ID..."
+        aws ec2 authorize-security-group-ingress \
+          --group-id $SG_ID \
+          --protocol tcp \
+          --port 22 \
+          --cidr $RUNNER_IP/32
 
     # Connect to the EC2 instance
     - name: Copy Database Migration File to EC2
@@ -118,3 +137,18 @@ jobs:
         curl -f -s --retry 5 --retry-delay 5 --retry-connrefused http://$EC2_HOST/
         
         echo "Smoking Gun Test Passed! GroceryMate is officially live and responding."
+
+    
+    # clean up the security group rule to remove the GitHub Runner IP after deployment for security hardening
+    - name: Revoke Runner IP from Security Group
+      if: always()
+      env:
+        SG_ID: ${{ secrets.EC2_SG_ID }}
+        RUNNER_IP: ${{ steps.ip.outputs.ipv4 }}
+      run: |
+        echo "Removing $RUNNER_IP from Security Group $SG_ID..."
+        aws ec2 revoke-security-group-ingress \
+          --group-id $SG_ID \
+          --protocol tcp \
+          --port 22 \
+          --cidr $RUNNER_IP/32 || true 
