@@ -138,15 +138,15 @@ jobs:
           --port 22 \
           --cidr $RUNNER_IP/32 || true 
 
-    # # Smoke Test to confirm the app is live and responding
-    # - name: Run Smoke Test
-    #   env:
-    #     EC2_HOST: ${{ secrets.EC2_HOST }}
-    #   run: |
-    #     echo "Waiting 10 seconds for the Docker container to fully boot..."
-    #     sleep 10
+    # Smoke Test to confirm the app is live and responding
+    - name: Run Smoke Test
+      env:
+        EC2_HOST: ${{ secrets.EC2_HOST }}
+      run: |
+        echo "Waiting 10 seconds for the Docker container to fully boot..."
+        sleep 10
         
-    #     echo "Pinging the live server..."
-    #     curl -f -s --retry 5 --retry-delay 5 --retry-connrefused http://$EC2_HOST/
+        echo "Pinging the live server..."
+        curl -f -s --retry 5 --retry-delay 5 --retry-connrefused http://$EC2_HOST:5000/
         
-    #     echo "Smoking Gun Test Passed! GroceryMate is officially live and responding."
+        echo "Smoking Gun Test Passed! GroceryMate is officially live and responding."
