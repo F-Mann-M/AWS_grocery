@@ -161,6 +161,17 @@ resource "aws_ecr_repository" "grocerymate_repo" { # terraform private name for 
 }
 
 
+# S3 Bucket for storing user avatars
+resource "aws_s3_bucket" "avatars" {
+  bucket = "grocerymate-avatars-24111983"
+
+  tags = {
+    Name        = "grocerymate-avatars"
+    Environment = "Dev"
+  }
+}
+
+
 ### OUTPUTS ###
 
 #output the public IP of the EC2 instance
@@ -175,8 +186,8 @@ output "rds_endpoint" {
   value       = aws_db_instance.postgres_db.address
 }
 
-# Output the URL of the ECR repository so GitHub Actions can use it later to push Docker images
-output "ecr_repository_url" {
-  description = "The URL of the ECR repository" 
-  value       = aws_ecr_repository.grocerymate_repo.repository_url
-}
+# # Output the URL of the ECR repository so GitHub Actions can use it later to push Docker images
+# output "ecr_repository_url" {
+#   description = "The URL of the ECR repository" 
+#   value       = aws_ecr_repository.grocerymate_repo.repository_url
+# }
