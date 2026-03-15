@@ -116,6 +116,9 @@ jobs:
             -e POSTGRES_DB=$PG_DB \
             -e POSTGRES_HOST=$PG_HOST \
             -e POSTGRES_URI="postgresql://$PG_USER:$PG_PASS@$PG_HOST:5432/$PG_DB" \
+            -e S3_BUCKET_NAME=grocerymate-avatars-24111983 \
+            -e S3_REGION=eu-central-1 \
+            -e USE_S3_STORAGE=true \
             $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           
           echo "Deployment finished!"
