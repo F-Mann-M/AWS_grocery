@@ -101,8 +101,7 @@ jobs:
           sudo systemctl enable docker
 
           echo "Running Database Migrations..."
-          # This executes the SQL file copied over in the previous step
-          PGPASSWORD=$PG_PASS psql -h $PG_HOST -U $PG_USER -d $PG_DB -f /home/ec2-user/schema.sql
+          PGPASSWORD=$PG_PASS psql -h $PG_HOST -U $PG_USER -d $PG_DB -f backend/app/sqlite_dump_clean.sql
           
           echo "Authenticating Docker with AWS ECR..."
           aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin $ECR_REGISTRY
