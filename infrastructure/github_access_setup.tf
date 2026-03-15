@@ -53,6 +53,7 @@ resource "aws_iam_role_policy_attachment" "github_ecr_access" {
 # Create a policy allowing GitHub to modify the Security Group
 # This is necessary for the workflow to update the EC2 Security Group with the correct IP for SSH access during deployment
 # instead of except all IPs, we can let GitHub Actions update the SG dynamically with the correct IP during deployment, which is more secure than allowing all IPs permanently.
+
 resource "aws_iam_policy" "github_sg_policy" {
   name        = "grocerymate-github-sg-policy"
   description = "Allow GitHub Actions to update EC2 Security Group for SSH"
@@ -65,7 +66,7 @@ resource "aws_iam_policy" "github_sg_policy" {
           "ec2:AuthorizeSecurityGroupIngress",
           "ec2:RevokeSecurityGroupIngress"
         ]
-        Resource = "aws_security_group.ec2_sg.arn" # restrict to the specific Security Group resource of the EC2 instance
+        Resource = aws_security_group.ec2_sg.arn, # allow GitHub to modify the EC2 Security Group
       }
     ]
   })

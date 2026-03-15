@@ -77,7 +77,7 @@ resource "aws_security_group" "rds_sg" {
 
 ### IAM ROLE FOR EC2 ###
 
-# Create IAM role for EC2 instance
+# Create IAM role for EC2 instance to access S3 and ECR
 resource "aws_iam_role" "ec2_s3_role" {
   name = "grocerymate-ec2-s3-role"
 
@@ -107,6 +107,11 @@ resource "aws_iam_instance_profile" "ec2_s3_profile" {
   role = aws_iam_role.ec2_s3_role.name
 }
 
+# Grant the EC2 instance permission to pull Docker images from ECR
+resource "aws_iam_role_policy_attachment" "ecr_read_access" {
+  role       = aws_iam_role.ec2_s3_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+}
 
 ### RESOURCE ###
 
