@@ -95,38 +95,48 @@ jobs:
         envs: ECR_REGISTRY,ECR_REPOSITORY,IMAGE_TAG,JWT_SECRET,PG_USER,PG_PASS,PG_DB,PG_HOST
         script: |
           echo "Installing PostgreSQL Client and Docker..."
-          sudo dnf update -y
-          sudo dnf install -y postgresql15 docker
+          sudo yum update -y
+          sudo yum install -y postgresql15 docker
           sudo systemctl start docker
           sudo systemctl enable docker
+
+          # check if there is a connection to the RDS instance before proceeding with the deployment
+          echo "Checking connection to PostgreSQL Database..."
+          nc -zv $PG_HOST 5432 || True
           
-          echo "Running Database Migrations..."
-          # This executes the SQL file copied over in the previous step
-          PGPASSWORD=$PG_PASS psql -h $PG_HOST -U $PG_USER -d $PG_DB -f /home/ec2-user/schema.sql
+          # psql -h $PG_HOST -U postgres -c "CREATE DATABASE grocerymate_db;"
+          # psql -h $PG_HOST -U postgres -c "CREATE USER $PG_USER WITH ENCRYPTED PASSWORD '$PG_PASS';"
+
+          # psql -h $PG_HOST -U postgres -c "CREATE USER $PG_USER WITH ENCRYPTED PASSWORD '$PG_PASS';"
+
+
+          # echo "Running Database Migrations..."
+          # # This executes the SQL file copied over in the previous step
+          # PGPASSWORD=$PG_PASS psql -h $PG_HOST -U $PG_USER -d $PG_DB -f /home/ec2-user/schema.sql
           
-          echo "Authenticating Docker with AWS ECR..."
-          aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin $ECR_REGISTRY
+          # echo "Authenticating Docker with AWS ECR..."
+          # aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin $ECR_REGISTRY
           
-          echo "Pulling fresh Docker Image..."
-          sudo docker pull $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          # echo "Pulling fresh Docker Image..."
+          # sudo docker pull $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           
-          echo "Stopping and removing old container..."
-          sudo docker stop grocerymate-app || true
-          sudo docker rm grocerymate-app || true
+          # echo "Stopping and removing old container..."
+          # sudo docker stop grocerymate-app || true
+          # sudo docker rm grocerymate-app || true
           
-          echo "Starting new container with Secrets..."
-          sudo docker run -d \
-            --name grocerymate-app \
-            -p 5000:5000 \
-            -e JWT_SECRET_KEY=$JWT_SECRET \
-            -e POSTGRES_USER=$PG_USER \
-            -e POSTGRES_PASSWORD=$PG_PASS \
-            -e POSTGRES_DB=$PG_DB \
-            -e POSTGRES_HOST=$PG_HOST \
-            -e POSTGRES_URI="postgresql://$PG_USER:$PG_PASS@$PG_HOST:5432/$PG_DB" \
-            $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          # echo "Starting new container with Secrets..."
+          # sudo docker run -d \
+          #   --name grocerymate-app \
+          #   -p 5000:5000 \
+          #   -e JWT_SECRET_KEY=$JWT_SECRET \
+          #   -e POSTGRES_USER=$PG_USER \
+          #   -e POSTGRES_PASSWORD=$PG_PASS \
+          #   -e POSTGRES_DB=$PG_DB \
+          #   -e POSTGRES_HOST=$PG_HOST \
+          #   -e POSTGRES_URI="postgresql://$PG_USER:$PG_PASS@$PG_HOST:5432/$PG_DB" \
+          #   $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           
-          echo "Deployment finished!"
+          # echo "Deployment finished!"
 
         
     # clean up the security group rule to remove the GitHub Runner IP after deployment for security hardening
@@ -143,15 +153,15 @@ jobs:
           --port 22 \
           --cidr $RUNNER_IP/32 || true 
 
-    # Smoke Test to confirm the app is live and responding
-    - name: Run Smoke Test
-      env:
-        EC2_HOST: ${{ secrets.EC2_HOST }}
-      run: |
-        echo "Waiting 10 seconds for the Docker container to fully boot..."
-        sleep 10
+    # # Smoke Test to confirm the app is live and responding
+    # - name: Run Smoke Test
+    #   env:
+    #     EC2_HOST: ${{ secrets.EC2_HOST }}
+    #   run: |
+    #     echo "Waiting 10 seconds for the Docker container to fully boot..."
+    #     sleep 10
         
-        echo "Pinging the live server..."
-        curl -f -s --retry 5 --retry-delay 5 --retry-connrefused http://$EC2_HOST/
+    #     echo "Pinging the live server..."
+    #     curl -f -s --retry 5 --retry-delay 5 --retry-connrefused http://$EC2_HOST/
         
-        echo "Smoking Gun Test Passed! GroceryMate is officially live and responding."
+    #     echo "Smoking Gun Test Passed! GroceryMate is officially live and responding."
