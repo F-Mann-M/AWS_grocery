@@ -65,7 +65,7 @@ resource "aws_iam_policy" "github_sg_policy" {
           "ec2:AuthorizeSecurityGroupIngress",
           "ec2:RevokeSecurityGroupIngress"
         ]
-        Resource = "*" # Or restrict to your specific SG ARN if you prefer
+        Resource = "aws_security_group.ec2_sg.arn" # restrict to the specific Security Group resource of the EC2 instance
       }
     ]
   })
