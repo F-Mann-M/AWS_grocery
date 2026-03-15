@@ -78,8 +78,8 @@ resource "aws_security_group" "rds_sg" {
 ### IAM ROLE FOR EC2 ###
 
 # Create IAM role for EC2 instance to access S3 and ECR
-resource "aws_iam_role" "ec2_s3_role" {
-  name = "grocerymate-ec2-s3-role"
+resource "aws_iam_role" "ec2_app_role" {
+  name = "grocerymate-ec2-app-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -95,23 +95,24 @@ resource "aws_iam_role" "ec2_s3_role" {
   })
 }
 
-# Attache S3 predefined policy to the role (allows EC2 to access S3)
+# Attach S3 predefined policy to the role (allows EC2 to access S3)
 resource "aws_iam_role_policy_attachment" "s3_full_access" {
-  role       = aws_iam_role.ec2_s3_role.name # point to the actual role name created above
-  policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess" # predifined AWS policy for full S3 access
-}
-
-# Create an instance profile and attach it to the role 
-resource "aws_iam_instance_profile" "ec2_s3_profile" {
-  name = "grocerymate-ec2-s3-profile"
-  role = aws_iam_role.ec2_s3_role.name
+  role       = aws_iam_role.ec2_app_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
 }
 
 # Grant the EC2 instance permission to pull Docker images from ECR
 resource "aws_iam_role_policy_attachment" "ecr_read_access" {
-  role       = aws_iam_role.ec2_s3_role.name
+  role       = aws_iam_role.ec2_app_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
 }
+
+# Create an instance profile and attach it to the role 
+resource "aws_iam_instance_profile" "ec2_app_profile" {
+  name = "grocerymate-ec2-app-profile"
+  role = aws_iam_role.ec2_app_role.name
+}
+
 
 ### RESOURCE ###
 
@@ -123,9 +124,25 @@ resource "aws_instance" "app_server" {
 
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
 
-  iam_instance_profile = aws_iam_instance_profile.ec2_s3_profile.name # attach the instance profile to EC2
+  iam_instance_profile = aws_iam_instance_profile.ec2_app_profile.name # attach the instance profile to EC2
 
   key_name = var.PRIVATE_KEY_NAME # use your own key pair name to be able to SSH into the instance
+
+  # use amazon-ecr-credential-helper to allow EC2 to pull images from ECR without needing to manage AWS credentials on the instance.
+  user_data = <<-EOF
+              #!/bin/bash
+              # Update OS and install Docker, Postgres Client, and ECR Credential Helper
+              yum update -y
+              yum install -y docker postgresql15 amazon-ecr-credential-helper
+              
+              # Enable and start Docker service
+              systemctl enable docker
+              systemctl start docker
+
+              # Configure Docker for the root user (for your 'sudo docker' commands)
+              mkdir -p /root/.docker
+              echo '{"credsStore": "ecr-login"}' > /root/.docker/config.json
+              EOF
 
   tags = {
     Name = "Grocerymate-App-Server"
@@ -141,7 +158,7 @@ resource "aws_db_instance" "postgres_db" {
   allocated_storage = 20 # min size in GB
 
   db_name  = "grocerymate_db"
-  username = "postgres_admin"
+  username = var.DB_USERNAME
   password = var.DB_PASSWORD
 
   vpc_security_group_ids = [aws_security_group.rds_sg.id]

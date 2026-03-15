@@ -95,17 +95,9 @@ jobs:
         envs: ECR_REGISTRY,ECR_REPOSITORY,IMAGE_TAG,JWT_SECRET,PG_USER,PG_PASS,PG_DB,PG_HOST
         script: |
           set -e -o pipefail # exit immediately if any command in the pipeline fails
-          echo "Installing PostgreSQL Client and Docker..."
-          sudo yum update -y
-          sudo yum install -y postgresql15 docker
-          sudo systemctl start docker
-          sudo systemctl enable docker
-
+                    
           echo "Running Database Migrations..."
           PGPASSWORD=$PG_PASS psql -h $PG_HOST -U $PG_USER -d $PG_DB -f backend/app/sqlite_dump_clean.sql
-          
-          echo "Authenticating Docker with AWS ECR..."
-          aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin $ECR_REGISTRY
           
           echo "Pulling fresh Docker Image..."
           sudo docker pull $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG

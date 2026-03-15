@@ -16,3 +16,9 @@ variable "PRIVATE_KEY_NAME" {
   sensitive   = true # hide password
 }
 
+variable "DB_USERNAME" {
+  description = "Master username for grocerymate db"
+  type        = string
+  sensitive   = true # hide password
+}
+
