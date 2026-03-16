@@ -11,15 +11,78 @@ provider "aws" {
   region = "eu-central-1" # Frankfurt
 }
 
-# use standard VPC
-data "aws_vpc" "default" {
-  default = true
+# Custom VPC
+resource "aws_vpc" "main" {
+  cidr_block = "10.0.0.0/16"
+
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+
+  tags = {
+    Name = "grocerymate-vpc"
+  }
 }
 
+# Internet gateway
+resource "aws_internet_gateway" "internet_gateway" {
+  vpc_id = aws_vpc.main.id
+
+  tags = {
+    Name = "grocerymate-igw"
+  }
+}
+
+# Public subnet
+resource "aws_subnet" "public_subnet" {
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = "10.0.1.0/24"
+  availability_zone       = "eu-central-1a"
+
+  tags = {
+    Name = "grocerymate-public-subnet"
+  }
+}
+
+# Route table for public subnet
+resource "aws_route_table" "public_rt" {
+  vpc_id = aws_vpc.main.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.internet_gateway.id
+  }
+}
+
+# Route table association for public subnet
+resource "aws_route_table_association" "public_rt_assoc" {
+  subnet_id      = aws_subnet.public_subnet.id
+  route_table_id = aws_route_table.public_rt.id
+}
+
+# Private subnet for RDS
+resource "aws_subnet" "private_subnet-1" {
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = "10.0.2.0/24"
+  availability_zone = "eu-central-1a"
+
+  tags = {
+    Name = "grocerymate-private-subnet-1"
+  }
+}
+
+# Subenet group for RDS in the private subnet in case we want to add more private subnets later for high availability
+resource "aws_db_subnet_group" "rds_subnet_group" {
+  name       = "grocerymate-rds-subnet-group"
+  subnet_ids = [aws_subnet.private_subnet-1.id]
+
+  tags = {
+    Name = "grocerymate-rds-subnet-group"
+  }
+}
 
 ### SECURITY GROUPS ###
 
-# Get your current IP address
+# Get current IP address
 data "http" "myip" {
   url = "https://ipv4.icanhazip.com"
 }
@@ -28,7 +91,7 @@ data "http" "myip" {
 resource "aws_security_group" "ec2_sg" {
   name        = "grocerymate-server-sg"
   description = "accepts HTTP and SSH traffic into the EC2 instance"
-  vpc_id      = data.aws_vpc.default.id
+  vpc_id      = aws_vpc.main.id
 
   # inbound SSH on prot 22
   ingress {
@@ -62,7 +125,7 @@ resource "aws_security_group" "ec2_sg" {
 resource "aws_security_group" "rds_sg" {
   name        = "grocerymate-database-sg"
   description = "accepts traffic only from the EC2 instance"
-  vpc_id      = data.aws_vpc.default.id
+  vpc_id      = aws_vpc.main.id
 
   # inbound: Port 5432 (Postgres)
   ingress {
@@ -77,7 +140,7 @@ resource "aws_security_group" "rds_sg" {
 
 ### IAM ROLE FOR EC2 ###
 
-# Create IAM role for EC2 instance to access S3 and ECR
+# IAM role for EC2 instance to access S3 and ECR
 resource "aws_iam_role" "ec2_app_role" {
   name = "grocerymate-ec2-app-role"
 
@@ -121,10 +184,12 @@ resource "aws_iam_instance_profile" "ec2_app_profile" {
 resource "aws_instance" "app_server" {
   ami           = "ami-096a4fdbcf530d8e0" # Amazon Linux 2023
   instance_type = "t2.micro"
+  subnet_id     = aws_subnet.public_subnet.id
+  associate_public_ip_address = true # ensure the instance gets a public IP
 
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
 
-  iam_instance_profile = aws_iam_instance_profile.ec2_app_profile.name # attach the instance profile to EC2
+  iam_instance_profile = aws_iam_instance_profile.ec2_app_profile.name 
 
   key_name = var.PRIVATE_KEY_NAME # use your own key pair name to be able to SSH into the instance
 
@@ -178,7 +243,6 @@ resource "aws_ecr_repository" "grocerymate_repo" { # terraform private name for 
 
   tags = {
     Name        = "grocerymate-app-repo"
-    Environment = "Dev"
   }
 }
 
@@ -189,7 +253,6 @@ resource "aws_s3_bucket" "avatars" {
 
   tags = {
     Name        = "grocerymate-avatars"
-    Environment = "Dev"
   }
 }
 
@@ -204,8 +267,13 @@ output "ec2_public_ip" {
 
 # output the RDS endpoint so the application can connect to it
 output "rds_endpoint" {
-  description = "Database Endpoint"
+description = "Database Endpoint copy and paste this into github secrets PSOTGRES_HOST"
   value       = aws_db_instance.postgres_db.address
+}
+
+output "ssh_connection_command" {
+  description = "Command to SSH into the EC2 instance"
+  value       = "ssh -i <private_key_name>.pem ec2-user@${aws_instance.app_server.public_ip}"
 }
 
 # # Output the URL of the ECR repository so GitHub Actions can use it later to push Docker images
