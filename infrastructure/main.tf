@@ -123,7 +123,7 @@ resource "aws_db_subnet_group" "rds_subnet_group" {
 
 # Get current IP address
 data "http" "myip" {
-  url = "https://ipv4.icanhazip.com"
+  url = "https://checkip.amazonaws.com"
 }
 
 # Security Group for instance
@@ -174,7 +174,6 @@ resource "aws_security_group" "rds_sg" {
     security_groups = [aws_security_group.ec2_sg.id] # just let EC2 connect to the database
   }
 }
-
 
 
 ### IAM ROLE FOR EC2 ###
