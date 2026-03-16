@@ -11,6 +11,9 @@ provider "aws" {
   region = "eu-central-1" # Frankfurt
 }
 
+
+### NETWORKING RESOURCES ###
+
 # Custom VPC
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
@@ -51,6 +54,10 @@ resource "aws_route_table" "public_rt" {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.internet_gateway.id
   }
+
+  tags = {
+    Name = "public_subnet_rt"
+  }
 }
 
 # Route table association for public subnet
@@ -60,7 +67,7 @@ resource "aws_route_table_association" "public_rt_assoc" {
 }
 
 # Private subnet for RDS
-resource "aws_subnet" "private_subnet-1" {
+resource "aws_subnet" "private_subnet_1" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = "10.0.2.0/24"
   availability_zone = "eu-central-1a"
@@ -70,15 +77,47 @@ resource "aws_subnet" "private_subnet-1" {
   }
 }
 
-# Subenet group for RDS in the private subnet in case we want to add more private subnets later for high availability
+resource "aws_subnet" "private_subnet_2" {
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = "10.0.3.0/24"
+  availability_zone = "eu-central-1b"
+
+  tags = {
+    Name = "grocerymate-private-subnet-2"
+  }
+}
+
+# Route table for private subnets (no internet access, just for RDS)
+resource "aws_route_table" "private_rt" {
+  vpc_id = aws_vpc.main.id
+
+  tags = {
+    Name = "private_subnet_rt"
+  }
+} 
+
+# Associate private subnet 1 with the private route table
+resource "aws_route_table_association" "private_rt_assoc_1" {
+  subnet_id      = aws_subnet.private_subnet_1.id
+  route_table_id = aws_route_table.private_rt.id
+}
+
+# Associate private subnet 2 with the private route table
+resource "aws_route_table_association" "private_rt_assoc_2" {
+  subnet_id      = aws_subnet.private_subnet_2.id
+  route_table_id = aws_route_table.private_rt.id
+}
+
+# RDS Subnet Group (allows RDS to use the private subnets)
 resource "aws_db_subnet_group" "rds_subnet_group" {
   name       = "grocerymate-rds-subnet-group"
-  subnet_ids = [aws_subnet.private_subnet-1.id]
+  subnet_ids = [aws_subnet.private_subnet_1.id, aws_subnet.private_subnet_2.id]
 
   tags = {
     Name = "grocerymate-rds-subnet-group"
   }
 }
+
 
 ### SECURITY GROUPS ###
 
@@ -227,6 +266,8 @@ resource "aws_db_instance" "postgres_db" {
   password = var.DB_PASSWORD
 
   vpc_security_group_ids = [aws_security_group.rds_sg.id]
+  db_subnet_group_name = aws_db_subnet_group.rds_subnet_group.name
+  
   publicly_accessible    = false # keep it private
   skip_final_snapshot    = true  # don't make a final snapshot
 }
