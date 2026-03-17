@@ -196,7 +196,6 @@ resource "aws_iam_role" "ec2_app_role" {
   })
 }
 
-
 # Attach S3 predefined policy to the role (allows EC2 to access S3)
 resource "aws_iam_role_policy_attachment" "s3_full_access" {
   role       = aws_iam_role.ec2_app_role.name
@@ -317,9 +316,3 @@ output "ssh_connection_command" {
   description = "Command to SSH into the EC2 instance"
   value       = "ssh -i <private_key_name>.pem ec2-user@${aws_instance.app_server.public_ip}"
 }
-
-# # Output the URL of the ECR repository so GitHub Actions can use it later to push Docker images
-# output "ecr_repository_url" {
-#   description = "The URL of the ECR repository" 
-#   value       = aws_ecr_repository.grocerymate_repo.repository_url
-# }
