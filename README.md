@@ -25,7 +25,7 @@ A core focus of this project is following the principle of least privilege. Hard
 * **Strict Repository Trust:** The AWS OIDC trust policy explicitly verifies the GitHub repository name, ensuring only this specific project can assume the deployment role.
 
 
-## CI/CD Workflow (How It All Fits Together)
+## CI/CD Workflow
 
 The deployment pipeline is fully automated via GitHub Actions (`deploy.yml`) and triggers automatically upon a push to the `version2` branch. Here is how the application transitions from code to a live cloud environment:
 
