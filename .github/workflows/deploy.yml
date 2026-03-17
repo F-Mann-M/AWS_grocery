@@ -63,7 +63,7 @@ jobs:
           --port 22 \
           --cidr $RUNNER_IP/32
 
-    # Connect to the EC2 instance
+    # Connect to the EC2 instance and run the database migration script 
     - name: Copy Database Migration File to EC2
       uses: appleboy/scp-action@v0.1.4
       with:
@@ -73,7 +73,7 @@ jobs:
         source: "backend/app/sqlite_dump_clean.sql" 
         target: "/home/ec2-user/"
 
-    # Connect to EC2 install postgresql, migrate DB, and run Docker
+    # Start docker container on EC2 with the new image and pass the secrets
     - name: Deploy to EC2
       uses: appleboy/ssh-action@v1.0.3
       env:
@@ -147,6 +147,6 @@ jobs:
         sleep 10
         
         echo "Pinging the live server..."
-        curl -f -s --retry 5 --retry-delay 5 --retry-connrefused http://$EC2_HOST:5000/
+        curl -f -s --retry 5 --retry-delay 5 --retry-connrefused http://$EC2_HOST/
         
         echo "Smoking Gun Test Passed! GroceryMate is officially live and responding."

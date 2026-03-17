@@ -32,7 +32,7 @@ resource "aws_iam_role" "github_actions_role" {
             "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
           }
           StringLike = {
-            # specify your GitHub repo here! The format is "repo:owner/repo:*" to allow all workflows in that repo.
+            # specify your GitHub repo here: "repo:owner/repo:*" to allow all workflows in that repo.
             "token.actions.githubusercontent.com:sub" = "repo:${var.GIT_USERNAME}/AWS_grocery:*"
           }
         }

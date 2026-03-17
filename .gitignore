@@ -136,3 +136,6 @@ infrastructure/.terraform/
 infrastructure/terraform.tfvars
 .idea/e-commerce.iml
 .idea/misc.xml
+AWS_Icons/
+infrastructure/.terraformgraph-state.json
+terraformgraph.html

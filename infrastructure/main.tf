@@ -145,7 +145,7 @@ resource "aws_security_group" "ec2_sg" {
 
   # inbound app (Port 5000 for GroceryMate)
   ingress {
-    from_port   = 5000
+    from_port   = 80
     to_port     = 5000
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
@@ -196,6 +196,7 @@ resource "aws_iam_role" "ec2_app_role" {
   })
 }
 
+
 # Attach S3 predefined policy to the role (allows EC2 to access S3)
 resource "aws_iam_role_policy_attachment" "s3_full_access" {
   role       = aws_iam_role.ec2_app_role.name
@@ -223,6 +224,7 @@ resource "aws_instance" "app_server" {
   ami           = "ami-096a4fdbcf530d8e0" # Amazon Linux 2023
   instance_type = "t2.micro"
   subnet_id     = aws_subnet.public_subnet.id
+
   associate_public_ip_address = true # ensure the instance gets a public IP
 
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
