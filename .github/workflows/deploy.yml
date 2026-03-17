@@ -109,7 +109,7 @@ jobs:
           echo "Starting new container with Secrets..."
           sudo docker run -d \
             --name grocerymate-app \
-            -p 5000:5000 \
+            -p 80:5000 \
             -e JWT_SECRET_KEY=$JWT_SECRET \
             -e POSTGRES_USER=$PG_USER \
             -e POSTGRES_PASSWORD=$PG_PASS \

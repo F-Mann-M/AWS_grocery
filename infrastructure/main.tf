@@ -145,7 +145,7 @@ resource "aws_security_group" "ec2_sg" {
 
   # inbound app (Port 5000 for GroceryMate)
   ingress {
-    from_port   = 80
+    from_port   = 5000
     to_port     = 5000
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
