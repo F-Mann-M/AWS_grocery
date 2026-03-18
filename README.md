@@ -16,7 +16,7 @@ The infrastructure is provisioned entirely via Terraform and is divided into log
 * **Storage (S3):** An S3 bucket (`grocerymate-avatars-24111983`) securely stores user-uploaded avatars.
 * **Container Registry (ECR):** An Amazon ECR repository (`grocerymate-app`) stores the application's Docker images with "scan on push" enabled for automated vulnerability detection.
 
-## The "Why" of IAM Roles
+## IAM Roles
 
 A core focus of this project is following the principle of least privilege. Hardcoded AWS access keys are a major security risk, so this architecture relies entirely on AWS Identity and Access Management (IAM) Roles.
 
