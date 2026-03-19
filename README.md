@@ -43,7 +43,7 @@ The deployment pipeline is fully automated via GitHub Actions (`deploy.yml`) and
 This infrastructure was intentionally architected to be cost-efficient, using the AWS Free Tier and avoiding expensive managed services:
 
 * **Compute & Database (Free Tier):** The application relies on a `t2.micro` EC2 instance and a `db.t3.micro` RDS PostgreSQL database with 20GB of storage. Both resources fall within the 12-month AWS Free Tier limits.
-* **Network Design (No NAT Gateway):** NAT Gateways incur high hourly and data processing fees. By placing the EC2 instance in a public subnet with direct Internet Gateway access, this architecture avoids NAT Gateway costs.
+* **Network Design (No NAT Gateway):** NAT Gateways incur high hourly and data processing fees. By placing the EC2 instance in a public subnet with direct Internet Gateway access, while hiding the database in a private subnet, this architecture avoids NAT Gateway costs.
 * **Database Configuration:** The RDS instance is configured as Single-AZ to avoid the doubled compute and storage costs associated with standby replicas. Additionally, `skip_final_snapshot = true` is enabled to prevent charges when the infrastructure is destroyed.
 * **Traffic Routing:** Instead of provisioning an expensive Application Load Balancer (ALB), HTTP traffic is routed directly to the EC2 instance via an auto-assigned dynamic public IP (`associate_public_ip_address = true`). This also avoids the potential costs of static Elastic IPs.
 * **CI/CD Pipeline:** The deployment pipeline is built entirely on GitHub Actions. This utilizes GitHub's free-tier minutes, eliminating the need to pay for an native AWS developer tools like CodeBuild.
