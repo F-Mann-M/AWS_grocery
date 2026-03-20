@@ -49,11 +49,12 @@ This infrastructure was intentionally architected to be cost-efficient, using th
 * **CI/CD Pipeline:** The deployment pipeline is built entirely on GitHub Actions. This utilizes GitHub's free-tier minutes, eliminating the need to pay for an native AWS developer tools like CodeBuild.
 
 
-## Future Improvements
+# Future Improvements (next iteration)
 
-While this infrastructure is highly cost-optimized for a development environment, the following enterprise-grade upgrades are planned for scaling to production:
+While this infrastructure is cost-optimized for development, the following enterprise-grade upgrades are planned for scaling to a highly available production environment:
 
-* **Implement a true 3-Tier Architecture:** Move the EC2 application server from the public subnet into a private subnet to completely shield it from direct internet exposure.
-* **Deploy an Application Load Balancer (ALB):** Place an ALB in the public subnet to act as a secure entry point, terminate SSL/HTTPS connections, and route traffic safely to the private EC2 instances.
-* **Serverless Health Monitoring:** Integrate an automated uptime monitor using Amazon EventBridge, AWS Lambda, and Amazon SNS to instantly alert administrators via email os SMS if the EC2 instance changes state or the application stops responding.
-* **IPv6 Adoption:** Upgrade the VPC and networking components to dual-stack to support IPv6, completely eliminating the need for paid public IPv4 addresses (once CI/CD runner limitations are resolved - GitHub Actions does not support IPv6).
+* **High Availability & Auto Scaling:** Replace the standalone `aws_instance` with an **AWS Auto Scaling Group (ASG)** and a **Launch Template**. This will provide self-healing capabilities and automatically scale the number of servers based on real-time traffic.
+* **True 3-Tier Architecture:** Provision a new set of dedicated "App Tier" private subnets to house the ASG. Place an **Application Load Balancer (ALB)** in the public subnet to act as the secure entry point, terminating SSL/HTTPS and routing traffic safely to the hidden EC2 instances.
+* **Secure Secrets Management:** Migrate sensitive environment variables (database credentials, JWT keys) out of the GitHub Actions pipeline. Store them securely in **AWS Systems Manager (SSM) Parameter Store**, allowing EC2 instances to fetch them dynamically at boot using IAM role permissions.
+* **Immutable CI/CD Pipeline:** Refactor the deployment workflow (`deploy.yml`) to eliminate direct SSH access and Security Group modifications. The pipeline will simply build the Docker image, push it to ECR, and trigger an **ASG Instance Refresh** for zero-downtime, automated rolling deployments.
+* **Serverless Health Monitoring:** Integrate an automated uptime monitor using Amazon EventBridge, AWS Lambda, and Amazon SNS to instantly alert administrators via email if instances change state or the application stops responding.
