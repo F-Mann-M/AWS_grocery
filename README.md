@@ -49,7 +49,7 @@ This infrastructure was intentionally architected to be cost-efficient, using th
 * **CI/CD Pipeline:** The deployment pipeline is built entirely on GitHub Actions. This utilizes GitHub's free-tier minutes, eliminating the need to pay for an native AWS developer tools like CodeBuild.
 
 
-# Future Improvements (next iteration)
+## Future Improvements (next iteration)
 
 While this infrastructure is cost-optimized for development, the following enterprise-grade upgrades are planned for scaling to a highly available production environment:
 
