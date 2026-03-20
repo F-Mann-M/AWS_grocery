@@ -1,4 +1,4 @@
-# GroceryMate Infrastructure & CI/CD Pipeline
+# GroceryMate Infrastructure & CI/CD Pipeline (2-Tier Architecture)
 
 This repository contains the Infrastructure as Code (IaC) and deployment pipelines for **GroceryMate**, a cloud-native web application. Built as part of the Masterschool Cloud Engineer track, this project provisions a secure, AWS environment using **Terraform** and automates application delivery using **Docker** and **GitHub Actions**.
 
@@ -47,3 +47,13 @@ This infrastructure was intentionally architected to be cost-efficient, using th
 * **Database Configuration:** The RDS instance is configured as Single-AZ to avoid the doubled compute and storage costs associated with standby replicas. Additionally, `skip_final_snapshot = true` is enabled to prevent charges when the infrastructure is destroyed.
 * **Traffic Routing:** Instead of provisioning an expensive Application Load Balancer (ALB), HTTP traffic is routed directly to the EC2 instance via an auto-assigned dynamic public IP (`associate_public_ip_address = true`). This also avoids the potential costs of static Elastic IPs.
 * **CI/CD Pipeline:** The deployment pipeline is built entirely on GitHub Actions. This utilizes GitHub's free-tier minutes, eliminating the need to pay for an native AWS developer tools like CodeBuild.
+
+
+## Future Improvements
+
+While this infrastructure is highly cost-optimized for a development environment, the following enterprise-grade upgrades are planned for scaling to production:
+
+* **Implement a true 3-Tier Architecture:** Move the EC2 application server from the public subnet into a private subnet to completely shield it from direct internet exposure.
+* **Deploy an Application Load Balancer (ALB):** Place an ALB in the public subnet to act as a secure entry point, terminate SSL/HTTPS connections, and route traffic safely to the private EC2 instances.
+* **Serverless Health Monitoring:** Integrate an automated uptime monitor using Amazon EventBridge, AWS Lambda, and Amazon SNS to instantly alert administrators via email os SMS if the EC2 instance changes state or the application stops responding.
+* **IPv6 Adoption:** Upgrade the VPC and networking components to dual-stack to support IPv6, completely eliminating the need for paid public IPv4 addresses (once CI/CD runner limitations are resolved - GitHub Actions does not support IPv6).
