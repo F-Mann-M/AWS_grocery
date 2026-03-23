@@ -1,4 +1,4 @@
-# GroceryMate Infrastructure & CI/CD Pipeline (2-Tier Architecture)
+# GroceryMate Infrastructure & CI/CD Pipeline (first iteration: 2-tier architecture)
 
 This repository contains the Infrastructure as Code (IaC) and deployment pipelines for **GroceryMate**, a cloud-native web application. Built as part of the Masterschool Cloud Engineer track, this project provisions a secure, AWS environment using **Terraform** and automates application delivery using **Docker** and **GitHub Actions**.
 
@@ -54,7 +54,7 @@ This infrastructure was intentionally architected to be cost-efficient, using th
 While this infrastructure is cost-optimized for development, the following enterprise-grade upgrades are planned for scaling to a highly available production environment:
 
 * **High Availability & Auto Scaling:** Replace the standalone `aws_instance` with an **AWS Auto Scaling Group (ASG)** and a **Launch Template**. This will provide self-healing capabilities and automatically scale the number of servers based on real-time traffic.
-* **True 3-Tier Architecture:** Provision a new set of dedicated "App Tier" private subnets to house the ASG. Place an **Application Load Balancer (ALB)** in the public subnet to act as the secure entry point, terminating SSL/HTTPS and routing traffic safely to the hidden EC2 instances.
+* **True 3-Tier Architecture:** Provision a new set of dedicated "App Tier" private subnets to house the EC2 instances. Place an **Application Load Balancer (ALB)** in the public subnet to act as the secure entry point, terminating SSL/HTTPS and routing traffic safely to the hidden EC2 instances.
 * **Secure Secrets Management:** Migrate sensitive environment variables (database credentials, JWT keys) out of the GitHub Actions pipeline. Store them securely in **AWS Systems Manager (SSM) Parameter Store**, allowing EC2 instances to fetch them dynamically at boot using IAM role permissions.
 * **Immutable CI/CD Pipeline:** Refactor the deployment workflow (`deploy.yml`) to eliminate direct SSH access and Security Group modifications. The pipeline will simply build the Docker image, push it to ECR, and trigger an **ASG Instance Refresh** for zero-downtime, automated rolling deployments.
 * **Serverless Health Monitoring:** Integrate an automated uptime monitor using Amazon EventBridge, AWS Lambda, and Amazon SNS to instantly alert administrators via email if instances change state or the application stops responding.
