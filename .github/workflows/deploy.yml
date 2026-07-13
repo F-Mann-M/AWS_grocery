@@ -67,7 +67,7 @@ jobs:
     - name: Copy Database Migration File to EC2
       uses: appleboy/scp-action@v0.1.4
       with:
-        host: ${{ secrets.EC2_HOST }}
+        host: ${{ secrets.EC2_PUBLIC_IP }}
         username: ec2-user
         key: ${{ secrets.EC2_SSH_KEY }}
         source: "backend/app/sqlite_dump_clean.sql" 
@@ -86,7 +86,7 @@ jobs:
         PG_USER: ${{ secrets.POSTGRES_USER }}
         PG_PASS: ${{ secrets.POSTGRES_PASSWORD }}
         PG_DB: ${{ secrets.POSTGRES_DB }}
-        PG_HOST: ${{ secrets.POSTGRES_HOST }}
+        PG_HOST: ${{ secrets.POSTGRES_ENDPOINT }}
       with:
         host: ${{ secrets.EC2_HOST }}
         username: ec2-user
@@ -114,7 +114,7 @@ jobs:
             -e POSTGRES_USER=$PG_USER \
             -e POSTGRES_PASSWORD=$PG_PASS \
             -e POSTGRES_DB=$PG_DB \
-            -e POSTGRES_HOST=$PG_HOST \
+            -e POSTGRES_ENDPOINT=$PG_HOST \
             -e POSTGRES_URI="postgresql://$PG_USER:$PG_PASS@$PG_HOST:5432/$PG_DB" \
             -e S3_BUCKET_NAME=grocerymate-avatars-24111983 \
             -e S3_REGION=eu-central-1 \
@@ -141,7 +141,7 @@ jobs:
     # Smoke Test to confirm the app is live and responding
     - name: Run Smoke Test
       env:
-        EC2_HOST: ${{ secrets.EC2_HOST }}
+        EC2_HOST: ${{ secrets.EC2_PUBLIC_IP }}
       run: |
         echo "Waiting 10 seconds for the Docker container to fully boot..."
         sleep 10

@@ -139,3 +139,9 @@ infrastructure/terraform.tfvars
 AWS_Icons/
 infrastructure/.terraformgraph-state.json
 terraformgraph.html
+backend/.env
+
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars

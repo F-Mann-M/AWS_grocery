@@ -14,7 +14,7 @@ provider "aws" {
 
 ### NETWORKING RESOURCES ###
 
-# Custom VPC
+# Custom VPC - Azure: Virtual Network (VNet)
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
 
@@ -26,7 +26,7 @@ resource "aws_vpc" "main" {
   }
 }
 
-# Internet gateway
+# Internet gateway - Azure: use NAT Gateway to manage outbound traffic
 resource "aws_internet_gateway" "internet_gateway" {
   vpc_id = aws_vpc.main.id
 
@@ -35,7 +35,7 @@ resource "aws_internet_gateway" "internet_gateway" {
   }
 }
 
-# Public subnet
+# Public subnet - Azure: you use Net Work Security Groups to handel inbound traffic and assign public IPs for outbound traffic
 resource "aws_subnet" "public_subnet" {
   vpc_id                  = aws_vpc.main.id
   cidr_block              = "10.0.1.0/24"
@@ -46,7 +46,7 @@ resource "aws_subnet" "public_subnet" {
   }
 }
 
-# Route table for public subnet
+# Route table for public subnet - Azure: has hidden route table automatically applied
 resource "aws_route_table" "public_rt" {
   vpc_id = aws_vpc.main.id
 
@@ -220,8 +220,8 @@ resource "aws_iam_instance_profile" "ec2_app_profile" {
 ### EC2 Instance ###
 
 resource "aws_instance" "app_server" {
-  ami           = "ami-096a4fdbcf530d8e0" # Amazon Linux 2023
-  instance_type = "t2.micro"
+  ami           = "ami-0fe327797e6857051" # Amazon Linux 2023
+  instance_type = "t3.micro"
   subnet_id     = aws_subnet.public_subnet.id
 
   associate_public_ip_address = true # ensure the instance gets a public IP
@@ -290,7 +290,7 @@ resource "aws_ecr_repository" "grocerymate_repo" { # terraform private name for 
 
 # S3 Bucket for storing user avatars
 resource "aws_s3_bucket" "avatars" {
-  bucket = "grocerymate-avatars-24111983"
+  bucket = "grocerymate-avatars-24111983-02"
 
   tags = {
     Name        = "grocerymate-avatars"
