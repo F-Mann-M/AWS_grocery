@@ -150,3 +150,5 @@ jobs:
         curl -f -s --retry 5 --retry-delay 5 --retry-connrefused http://$EC2_HOST/
         
         echo "Smoking Gun Test Passed! GroceryMate is officially live and responding."
+
+# test

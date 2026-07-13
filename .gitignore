@@ -138,6 +138,7 @@ infrastructure/terraform.tfvars
 .idea/misc.xml
 AWS_Icons/
 infrastructure/.terraformgraph-state.json
+infrastructure/.terraform.tfstate.lock.info
 terraformgraph.html
 backend/.env
 
